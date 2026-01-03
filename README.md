@@ -226,5 +226,4 @@ Kafka • Java • Spring Boot • OCI • Microservices
 
 This project is provided for educational and development purposes.
 
-````
 ---
