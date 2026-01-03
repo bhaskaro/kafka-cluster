@@ -18,16 +18,10 @@ import java.util.concurrent.Executors;
 @Service
 public class KafkaProducerService {
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ExecutorService executor =
-            Executors.newFixedThreadPool(4);
-
-    private static final List<String> TOPICS =
-            List.of("orders", "payments", "shipments", "notifications");
-
-    public KafkaProducerService(KafkaTemplate<String, String> kafkaTemplate) {
-        this.kafkaTemplate = kafkaTemplate;
-    }
+    private static final List<String> TOPICS = List.of("orders", "payments", "shipments", "notifications");
+    private final ExecutorService executor = Executors.newFixedThreadPool(4);
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     public void publishMessages() {
         for (String topic : TOPICS) {
@@ -35,7 +29,6 @@ public class KafkaProducerService {
                 for (int i = 0; i < 25; i++) {
                     String key = UUID.randomUUID().toString();
                     String value = "Message " + i + " from " + topic;
-
                     kafkaTemplate.send(topic, key, value);
                 }
             });

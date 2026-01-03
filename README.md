@@ -1,6 +1,7 @@
 # Kafka Cluster (KRaft Mode) – Docker Compose
 
-This repository contains a **3-node Apache Kafka cluster** running in **KRaft mode (no Zookeeper)** using Docker Compose, along with example topics intended for local development and testing.
+This repository contains a **3-node Apache Kafka cluster** running in **KRaft mode (no Zookeeper)** using Docker
+Compose, along with example topics intended for local development and testing.
 
 The setup follows **production-aligned Kafka practices** while remaining simple enough for local experimentation.
 
@@ -20,15 +21,16 @@ The setup follows **production-aligned Kafka practices** while remaining simple 
 
 ## 🧱 Architecture Overview
 
-| Component | Description |
-|---------|------------|
-| kafka-1 | Broker + Controller (external access) |
-| kafka-2 | Broker + Controller (internal only) |
-| kafka-3 | Broker + Controller (internal only) |
-| KRaft | Metadata quorum using Raft |
-| Topics | orders, payments, shipments, notifications |
+| Component | Description                                |
+|-----------|--------------------------------------------|
+| kafka-1   | Broker + Controller (external access)      |
+| kafka-2   | Broker + Controller (internal only)        |
+| kafka-3   | Broker + Controller (internal only)        |
+| KRaft     | Metadata quorum using Raft                 |
+| Topics    | orders, payments, shipments, notifications |
 
 **Listeners**
+
 - `PLAINTEXT` → inter-broker + admin traffic
 - `CONTROLLER` → KRaft quorum communication
 - `EXTERNAL` → host-based clients (Spring Boot, CLI)
@@ -186,7 +188,7 @@ spring:
 ## 🛠️ Common Commands
 
 | Action             | Command                            |
-| ------------------ | ---------------------------------- |
+|--------------------|------------------------------------|
 | List topics        | `kafka-topics --list`              |
 | Describe topics    | `kafka-topics --describe`          |
 | Delete topic       | `kafka-topics --delete`            |

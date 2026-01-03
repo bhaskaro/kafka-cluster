@@ -13,11 +13,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class ScheduledKafkaProducer {
 
-    private final KafkaProducerService producerService;
-
-    public ScheduledKafkaProducer(KafkaProducerService producerService) {
-        this.producerService = producerService;
-    }
+    @Autowired
+    private KafkaProducerService producerService;
 
     @Scheduled(fixedRate = 5000)
     public void produceMessages() {
