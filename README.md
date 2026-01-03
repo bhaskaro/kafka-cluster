@@ -227,15 +227,4 @@ Kafka • Java • Spring Boot • OCI • Microservices
 This project is provided for educational and development purposes.
 
 ````
-
----
-
-## ✅ Ready to Commit
-
-```bash
-git add README.md
-git commit -m "Add Kafka KRaft cluster README"
-git push
-````
-
 ---
