@@ -1,5 +1,7 @@
 package com.oggu.jms.kafkaclient.consumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
@@ -13,14 +15,26 @@ import org.springframework.stereotype.Service;
 @Service
 public class KafkaConsumerService {
 
-    @KafkaListener(topics = {"orders", "payments", "shipments", "notifications"},
-            concurrency = "4",
-            groupId = "scheduled-consumer-group")
-    public void consume(String message, @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
-                        @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
-        System.out.printf("Thread=%s | Topic=%s | Partition=%d | Message=%s%n",
-                Thread.currentThread().getName(), topic, partition, message
-        );
+    private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerService.class);
+
+    @KafkaListener(topics = "${app.kafka.topics.orders}", groupId = "scheduled-consumer-group", concurrency = "2")
+    public void consumeOrders(String message, @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
+        logger.info("ORDERS | Thread={} | Partition={} | Message={}%n", Thread.currentThread().getName(), partition, message);
+    }
+
+    @KafkaListener(topics = "${app.kafka.topics.payments}", groupId = "scheduled-consumer-group", concurrency = "2")
+    public void consumePayments(String message, @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
+        logger.info("PAYMENTS | Thread={} | Partition={} | Message={}%n", Thread.currentThread().getName(), partition, message);
+    }
+
+    @KafkaListener(topics = "${app.kafka.topics.shipments}", groupId = "scheduled-consumer-group", concurrency = "2")
+    public void consumeShipments(String message, @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
+        logger.info("SHIPMENTS | Thread={} | Partition={} | Message={}%n", Thread.currentThread().getName(), partition, message);
+    }
+
+    @KafkaListener(topics = "${app.kafka.topics.notifications}", groupId = "scheduled-consumer-group", concurrency = "2")
+    public void consumeNotifications(String message, @Header(KafkaHeaders.RECEIVED_PARTITION) int partition) {
+        logger.info("NOTIFICATIONS | Thread={} | Partition={} | Message={}%n", Thread.currentThread().getName(), partition, message);
     }
 }
 
