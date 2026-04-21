@@ -1,75 +1,80 @@
-services:
+version: '3.8'
 
-  kafka-1:
-    image: confluentinc/cp-kafka:7.6.0
-    hostname: kafka-1
-    container_name: kafka-1
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+  kafka1:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka1
+    depends_on:
+      - zookeeper
     ports:
       - "9092:9092"
     environment:
-      CLUSTER_ID: "Kf9Jx7Y9QnqVJ7h6mN3bDQ"
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.222:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
 
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-
-      # IMPORTANT: controller listener MUST exist here
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:19092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9092
-
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:19092,EXTERNAL://localhost:9092
-
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-
-      # THIS must match the listener name above
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:9093,2@kafka-2:9093,3@kafka-3:9093
-
-
-
-  kafka-2:
-    image: confluentinc/cp-kafka:7.6.0
-    hostname: kafka-2
-    container_name: kafka-2
+  kafka2:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka2
+    depends_on:
+      - zookeeper
+    ports:
+      - "9093:9092"
     environment:
-      CLUSTER_ID: "Kf9Jx7Y9QnqVJ7h6mN3bDQ"
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.222:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
 
-      KAFKA_NODE_ID: 2
-      KAFKA_PROCESS_ROLES: broker,controller
-
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:19092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:19092
-
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:9093,2@kafka-2:9093,3@kafka-3:9093
-
-
-
-  kafka-3:
-    image: confluentinc/cp-kafka:7.6.0
-    hostname: kafka-3
-    container_name: kafka-3
+  kafka3:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka3
+    depends_on:
+      - zookeeper
+    ports:
+      - "9094:9092"
     environment:
-      CLUSTER_ID: "Kf9Jx7Y9QnqVJ7h6mN3bDQ"
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.222:9094
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
 
-      KAFKA_NODE_ID: 3
-      KAFKA_PROCESS_ROLES: broker,controller
+  kafka4:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka4
+    depends_on:
+      - zookeeper
+    ports:
+      - "9095:9092"
+    environment:
+      KAFKA_BROKER_ID: 4
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.222:9095
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
 
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:19092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:19092
-
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:9093,2@kafka-2:9093,3@kafka-3:9093
-
-
-
-volumes:
-  kafka-1-data:
-  kafka-2-data:
-  kafka-3-data:
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+      - kafka4
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:9092,kafka2:9092,kafka3:9092,kafka4:9092
