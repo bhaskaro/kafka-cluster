@@ -5,17 +5,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.stereotype.Service;
 
 /**
  *
  * Author : bhask
  * Created : 01-02-2026
  */
-@Service
-public class KafkaConsumerService {
+//@Service
+public class KafkaConsumerServiceOld {
 
-    private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerService.class);
+    private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerServiceOld.class);
 
     @KafkaListener(topics = "${app.kafka.topics.orders}", groupId = "scheduled-consumer-group", concurrency = "2")
     public void consumeOrders(
