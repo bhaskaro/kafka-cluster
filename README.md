@@ -197,6 +197,200 @@ spring:
 
 ---
 
+# 📊 Observability (Prometheus & Grafana)
+
+This setup includes **Kafka monitoring using Prometheus and Grafana**, exposing broker metrics via JMX and visualizing them through dashboards.
+
+---
+
+## 🔍 Access URLs
+
+> Replace `<HOST_IP>` with your machine IP if accessing remotely
+
+| Component         | URL                           |
+| ----------------- | ----------------------------- |
+| Kafka UI          | http://<HOST_IP>:8080/ui/     |
+| Prometheus        | http://<HOST_IP>:9090/query   |
+| Grafana Dashboard | http://<HOST_IP>:3000         |
+| Kafka Metrics     | http://<HOST_IP>:7071/metrics |
+
+---
+
+## 🧱 Monitoring Architecture
+
+```text
+Kafka Brokers → JMX Metrics → JMX Exporter → Prometheus → Grafana
+```
+
+* Kafka exposes metrics via **JMX**
+* JMX Exporter converts them to **Prometheus format**
+* Prometheus scrapes metrics
+* Grafana visualizes dashboards
+
+---
+
+## 📈 Available Metrics
+
+### Broker Metrics
+
+* Messages in/sec
+* Bytes in/sec
+* Bytes out/sec
+* Request rate
+
+### Cluster Metrics
+
+* Leader count
+* Partition count
+* Under-replicated partitions
+
+### Topic Metrics
+
+* Throughput per topic
+* Traffic distribution
+
+---
+
+## ⚠️ Important Notes
+
+* Metrics are exposed via **JMX Exporter (port 7071)**
+* Prometheus scrapes Kafka brokers at configured intervals
+* Grafana dashboards depend on correct **JMX mapping rules**
+* Some dashboards require **additional exporters (e.g., consumer lag)**
+
+---
+
+## 📊 Grafana Setup
+
+### Default Login
+
+```text
+Username: admin
+Password: admin
+```
+
+---
+
+### Add Prometheus Data Source
+
+1. Go to **Settings → Data Sources**
+2. Select **Prometheus**
+3. Set URL:
+
+```text
+http://prometheus:9090
+```
+
+---
+
+### Import Kafka Dashboard
+
+Use a Kafka dashboard (example):
+
+```text
+Dashboard ID: 721
+```
+
+---
+
+## 💾 Persisting Grafana Dashboards
+
+By default, Grafana data is lost on container restart.
+
+### ✅ Enable persistence (recommended)
+
+Add volume to `docker-compose.yml`:
+
+```yaml
+grafana:
+  image: grafana/grafana
+  ports:
+    - "3000:3000"
+  volumes:
+    - grafana-data:/var/lib/grafana
+  environment:
+    - GF_SECURITY_ADMIN_PASSWORD=admin
+
+volumes:
+  grafana-data:
+```
+
+---
+
+### 🟢 Alternative (host-mounted volume)
+
+```yaml
+volumes:
+  - ./grafana-data:/var/lib/grafana
+```
+
+👉 This allows:
+
+* easy backup
+* local inspection
+
+---
+
+## ⚠️ Common Issues
+
+| Issue                | Cause                      | Fix                              |
+| -------------------- | -------------------------- | -------------------------------- |
+| No data in Grafana   | Missing JMX mappings       | Update `kafka-jmx.yml`           |
+| Metrics missing      | Exporter config incomplete | Add kafka.server / cluster rules |
+| Consumer lag empty   | No exporter                | Add Kafka Exporter               |
+| Dashboards disappear | No volume                  | Add persistent storage           |
+
+---
+
+## 🔧 Debugging Steps
+
+1. Check metrics endpoint:
+
+```text
+http://<HOST_IP>:7071/metrics
+```
+
+2. Verify Prometheus:
+
+```promql
+up
+```
+
+3. Search metrics:
+
+```promql
+{kafka_server_brokertopicmetrics_meanrate}
+```
+
+---
+
+## 🚀 Production Insight
+
+A complete Kafka observability stack typically includes:
+
+```text
+JMX Exporter + Prometheus + Grafana + Kafka Exporter
+```
+
+* JMX Exporter → broker metrics
+* Kafka Exporter → consumer lag + topic metrics
+* Prometheus → storage
+* Grafana → visualization
+
+---
+
+## 🎯 Key Learning
+
+* Kafka metrics require **proper JMX mapping**
+* Grafana dashboards depend on **metric naming consistency**
+* Observability is critical for:
+
+    * throughput monitoring
+    * lag detection
+    * system health
+
+---
+
 ## 📌 Troubleshooting
 
 * If brokers exit immediately → check listener names
