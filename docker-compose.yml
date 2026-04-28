@@ -16,12 +16,18 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
+      - "7071:7071"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.222:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
+      KAFKA_OPTS: "-javaagent:/opt/jmx_exporter.jar=7071:/opt/kafka-jmx.yml"
+    volumes:
+      - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
+      - ./kafka-jmx.yml:/opt/kafka-jmx.yml
+
 
   kafka2:
     image: confluentinc/cp-kafka:7.5.0
@@ -30,12 +36,17 @@ services:
       - zookeeper
     ports:
       - "9093:9092"
+      - "7072:7071"
     environment:
       KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.222:9093
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
+      KAFKA_OPTS: "-javaagent:/opt/jmx_exporter.jar=7071:/opt/kafka-jmx.yml"
+    volumes:
+      - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
+      - ./kafka-jmx.yml:/opt/kafka-jmx.yml
 
   kafka3:
     image: confluentinc/cp-kafka:7.5.0
@@ -44,12 +55,17 @@ services:
       - zookeeper
     ports:
       - "9094:9092"
+      - "7073:7071"
     environment:
       KAFKA_BROKER_ID: 3
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.222:9094
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
+      KAFKA_OPTS: "-javaagent:/opt/jmx_exporter.jar=7071:/opt/kafka-jmx.yml"
+    volumes:
+      - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
+      - ./kafka-jmx.yml:/opt/kafka-jmx.yml
 
   kafka4:
     image: confluentinc/cp-kafka:7.5.0
@@ -58,12 +74,17 @@ services:
       - zookeeper
     ports:
       - "9095:9092"
+      - "7074:7071"
     environment:
       KAFKA_BROKER_ID: 4
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.222:9095
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
+      KAFKA_OPTS: "-javaagent:/opt/jmx_exporter.jar=7071:/opt/kafka-jmx.yml"
+    volumes:
+      - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
+      - ./kafka-jmx.yml:/opt/kafka-jmx.yml
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -78,3 +99,25 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: local-cluster
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:9092,kafka2:9092,kafka3:9092,kafka4:9092
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+# 👇 THIS MUST BE AT ROOT LEVEL (same indentation as services)
+volumes:
+  grafana-data:
