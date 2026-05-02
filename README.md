@@ -1,423 +1,95 @@
-# Kafka Cluster (KRaft Mode) – Docker Compose
+# Kafka Cluster (KRaft Mode) - Docker Compose
 
-This repository contains a **3-node Apache Kafka cluster** running in **KRaft mode (no Zookeeper)** using Docker
-Compose, along with example topics intended for local development and testing.
+This repository runs a **4-node Apache Kafka cluster** in **KRaft mode** (no ZooKeeper) using Docker Compose.
+It also includes Kafka UI, Prometheus, and Grafana for local testing and observability.
 
-The setup follows **production-aligned Kafka practices** while remaining simple enough for local experimentation.
+## Features
 
----
+- Kafka **KRaft mode** using `confluentinc/cp-kafka:7.8.3`
+- **4 brokers**, each configured as `broker,controller`
+- Shared `CLUSTER_ID` across all brokers
+- Kafka UI for topic and cluster inspection
+- Prometheus + Grafana monitoring
+- JMX exporter enabled per broker
 
-## ✨ Features
+## Services and Ports
 
-- Apache Kafka **KRaft mode** (no Zookeeper)
-- **3 brokers**, each acting as **broker + controller**
-- Proper **controller quorum**
-- Explicit **listener configuration** (internal + external)
-- **Manual topic management** (auto-create disabled)
-- Compatible with **Spring Boot / Java Kafka clients**
-- Designed to avoid common Kafka Docker pitfalls
+| Service | Purpose | Host Port |
+|---|---|---|
+| kafka1 | Broker + Controller + JMX | `9092`, `7071` |
+| kafka2 | Broker + Controller + JMX | `9093`, `7072` |
+| kafka3 | Broker + Controller + JMX | `9094`, `7073` |
+| kafka4 | Broker + Controller + JMX | `9095`, `7074` |
+| kafka-ui | Web UI | `8080` |
+| prometheus | Metrics scrape/query | `9090` |
+| grafana | Dashboards | `3000` |
 
----
+## Prerequisites
 
-## 🧱 Architecture Overview
-
-| Component | Description                                |
-|-----------|--------------------------------------------|
-| kafka-1   | Broker + Controller (external access)      |
-| kafka-2   | Broker + Controller (internal only)        |
-| kafka-3   | Broker + Controller (internal only)        |
-| KRaft     | Metadata quorum using Raft                 |
-| Topics    | orders, payments, shipments, notifications |
-
-**Listeners**
-
-- `PLAINTEXT` → inter-broker + admin traffic
-- `CONTROLLER` → KRaft quorum communication
-- `EXTERNAL` → host-based clients (Spring Boot, CLI)
-
----
-
-## 📦 Prerequisites
-
-- Docker 24+
+- Docker
 - Docker Compose v2
-- Linux / macOS (tested on Ubuntu)
-- Java 17+ (for client applications)
 
----
+## CLUSTER_ID (KRaft)
 
-## 🚀 Getting Started
-
-### 1️⃣ Clone the repository
+KRaft requires a cluster UUID. Generate it once and use the same value for all brokers in `docker-compose.yml`:
 
 ```bash
-git clone git@github.com:bhaskaro/kafka-cluster.git
-cd kafka-cluster
-````
+docker run --rm confluentinc/cp-kafka:7.8.3 kafka-storage random-uuid
+```
 
----
+Set that value in each broker's `CLUSTER_ID` environment variable.
 
-### 2️⃣ Start the Kafka cluster
+## Start Cluster
 
-> ⚠️ This setup uses KRaft. A **clean start is required** if configs change.
+```bash
+docker compose up -d
+```
+
+For a clean restart (removes volumes and broker metadata):
 
 ```bash
 docker compose down -v
 docker compose up -d
 ```
 
-Wait ~20–30 seconds for brokers and controller quorum to form.
+## Verify Cluster
 
----
-
-### 3️⃣ Verify cluster health
+List topics from broker container:
 
 ```bash
-docker exec -it kafka-1 \
-  kafka-topics --bootstrap-server kafka-1:19092 --list
+docker exec -it kafka1 kafka-topics --bootstrap-server kafka1:9092 --list
 ```
 
-Expected output:
-
-```
-__consumer_offsets
-orders
-payments
-shipments
-notifications
-```
-
-If this command works, the cluster is healthy.
-
----
-
-## 🗂️ Topic Management
-
-Auto topic creation is **disabled by design**.
-
-### Create topics manually
+From host machine, use any mapped broker port, for example:
 
 ```bash
-docker exec -it kafka-1 kafka-topics \
-  --bootstrap-server kafka-1:19092 \
-  --create --topic orders \
-  --partitions 6 --replication-factor 3
+kafka-topics --bootstrap-server localhost:9092 --list
 ```
 
-Repeat for:
+## Kafka UI
 
-* `payments`
-* `shipments`
-* `notifications`
+Open:
 
----
+- `http://localhost:8080`
 
-### Recreate topics (after volume wipe)
+Configured bootstrap servers:
 
-If you ran:
+- `kafka1:9092,kafka2:9092,kafka3:9092,kafka4:9092`
 
-```bash
-docker compose down -v
-```
+## Monitoring
 
-You **must recreate topics**, since metadata is deleted.
+- Prometheus: `http://localhost:9090`
+- Grafana: `http://localhost:3000` (admin password: `admin`)
 
----
+JMX metrics endpoints per broker:
 
-## 🧪 Quick Test (CLI)
+- `http://localhost:7071/metrics`
+- `http://localhost:7072/metrics`
+- `http://localhost:7073/metrics`
+- `http://localhost:7074/metrics`
 
-### Produce a message
+## Notes
 
-```bash
-docker exec -it kafka-1 \
-  kafka-console-producer \
-  --bootstrap-server kafka-1:19092 \
-  --topic orders
-```
-
-Type:
-
-```
-hello-kafka
-```
-
-### Consume the message
-
-```bash
-docker exec -it kafka-1 \
-  kafka-console-consumer \
-  --bootstrap-server kafka-1:19092 \
-  --topic orders \
-  --from-beginning
-```
-
----
-
-## 🧑‍💻 Client Configuration (Spring Boot example)
-
-```yaml
-spring:
-  kafka:
-    bootstrap-servers: localhost:9092
-    producer:
-      acks: all
-      retries: 5
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-    consumer:
-      group-id: demo-consumer-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    listener:
-      concurrency: 4
-```
-
----
-
-## ⚠️ Important Notes
-
-* **KRaft mode requires strict listener configuration**
-* Deleting Docker volumes **removes all topics**
-* Only **one external port (9092)** is exposed
-* All brokers advertise a reachable listener for leaders
-* This setup is intended for **local development and learning**
-
----
-
-## 🛠️ Common Commands
-
-| Action             | Command                            |
-|--------------------|------------------------------------|
-| List topics        | `kafka-topics --list`              |
-| Describe topics    | `kafka-topics --describe`          |
-| Delete topic       | `kafka-topics --delete`            |
-| Check consumer lag | `kafka-consumer-groups --describe` |
-| View broker logs   | `docker logs kafka-1`              |
-
----
-
-# 📊 Observability (Prometheus & Grafana)
-
-This setup includes **Kafka monitoring using Prometheus and Grafana**, exposing broker metrics via JMX and visualizing them through dashboards.
-
----
-
-## 🔍 Access URLs
-
-> Replace `<HOST_IP>` with your machine IP if accessing remotely
-
-| Component         | URL                           |
-| ----------------- | ----------------------------- |
-| Kafka UI          | http://<HOST_IP>:8080/ui/     |
-| Prometheus        | http://<HOST_IP>:9090/query   |
-| Grafana Dashboard | http://<HOST_IP>:3000         |
-| Kafka Metrics     | http://<HOST_IP>:7071/metrics |
-
----
-
-## 🧱 Monitoring Architecture
-
-```text
-Kafka Brokers → JMX Metrics → JMX Exporter → Prometheus → Grafana
-```
-
-* Kafka exposes metrics via **JMX**
-* JMX Exporter converts them to **Prometheus format**
-* Prometheus scrapes metrics
-* Grafana visualizes dashboards
-
----
-
-## 📈 Available Metrics
-
-### Broker Metrics
-
-* Messages in/sec
-* Bytes in/sec
-* Bytes out/sec
-* Request rate
-
-### Cluster Metrics
-
-* Leader count
-* Partition count
-* Under-replicated partitions
-
-### Topic Metrics
-
-* Throughput per topic
-* Traffic distribution
-
----
-
-## ⚠️ Important Notes
-
-* Metrics are exposed via **JMX Exporter (port 7071)**
-* Prometheus scrapes Kafka brokers at configured intervals
-* Grafana dashboards depend on correct **JMX mapping rules**
-* Some dashboards require **additional exporters (e.g., consumer lag)**
-
----
-
-## 📊 Grafana Setup
-
-### Default Login
-
-```text
-Username: admin
-Password: admin
-```
-
----
-
-### Add Prometheus Data Source
-
-1. Go to **Settings → Data Sources**
-2. Select **Prometheus**
-3. Set URL:
-
-```text
-http://prometheus:9090
-```
-
----
-
-### Import Kafka Dashboard
-
-Use a Kafka dashboard (example):
-
-```text
-Dashboard ID: 721
-```
-
----
-
-## 💾 Persisting Grafana Dashboards
-
-By default, Grafana data is lost on container restart.
-
-### ✅ Enable persistence (recommended)
-
-Add volume to `docker-compose.yml`:
-
-```yaml
-grafana:
-  image: grafana/grafana
-  ports:
-    - "3000:3000"
-  volumes:
-    - grafana-data:/var/lib/grafana
-  environment:
-    - GF_SECURITY_ADMIN_PASSWORD=admin
-
-volumes:
-  grafana-data:
-```
-
----
-
-### 🟢 Alternative (host-mounted volume)
-
-```yaml
-volumes:
-  - ./grafana-data:/var/lib/grafana
-```
-
-👉 This allows:
-
-* easy backup
-* local inspection
-
----
-
-## ⚠️ Common Issues
-
-| Issue                | Cause                      | Fix                              |
-| -------------------- | -------------------------- | -------------------------------- |
-| No data in Grafana   | Missing JMX mappings       | Update `kafka-jmx.yml`           |
-| Metrics missing      | Exporter config incomplete | Add kafka.server / cluster rules |
-| Consumer lag empty   | No exporter                | Add Kafka Exporter               |
-| Dashboards disappear | No volume                  | Add persistent storage           |
-
----
-
-## 🔧 Debugging Steps
-
-1. Check metrics endpoint:
-
-```text
-http://<HOST_IP>:7071/metrics
-```
-
-2. Verify Prometheus:
-
-```promql
-up
-```
-
-3. Search metrics:
-
-```promql
-{kafka_server_brokertopicmetrics_meanrate}
-```
-
----
-
-## 🚀 Production Insight
-
-A complete Kafka observability stack typically includes:
-
-```text
-JMX Exporter + Prometheus + Grafana + Kafka Exporter
-```
-
-* JMX Exporter → broker metrics
-* Kafka Exporter → consumer lag + topic metrics
-* Prometheus → storage
-* Grafana → visualization
-
----
-
-## 🎯 Key Learning
-
-* Kafka metrics require **proper JMX mapping**
-* Grafana dashboards depend on **metric naming consistency**
-* Observability is critical for:
-
-    * throughput monitoring
-    * lag detection
-    * system health
-
----
-
-## 📌 Troubleshooting
-
-* If brokers exit immediately → check listener names
-* If topics disappear → volumes were removed
-* If clients cannot connect → verify `EXTERNAL` listener
-* Always restart with `docker compose down -v` after listener changes
-
----
-
-## 📚 References
-
-* Apache Kafka Documentation
-* Kafka KRaft Mode (ZooKeeper-less Kafka)
-* Confluent cp-kafka Docker Image
-
----
-
-## 👤 Author
-
-**Vijaya Bhaskar Oggu**
-Enterprise Architect | Cloud & Distributed Systems
-Kafka • Java • Spring Boot • OCI • Microservices
-
----
-
-## 📝 License
-
-This project is provided for educational and development purposes.
-
----
+- This setup is KRaft-only; ZooKeeper is not used.
+- If you change KRaft storage-related settings, do a clean restart with `docker compose down -v`.
+- `KAFKA_ADVERTISED_LISTENERS` in compose should use your reachable host IP (or DNS name) for external clients.
