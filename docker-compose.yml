@@ -1,27 +1,24 @@
 version: '3.8'
 
 services:
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.5.0
-    container_name: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-    ports:
-      - "2181:2181"
 
   kafka1:
-    image: confluentinc/cp-kafka:7.5.0
+    image: confluentinc/cp-kafka:7.8.3
     container_name: kafka1
-    depends_on:
-      - zookeeper
+    hostname: kafka1
     ports:
       - "9092:9092"
       - "7071:7071"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.222:9092
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${HOST_IP:-127.0.0.1}:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093,4@kafka4:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      CLUSTER_ID: "f7lZDNZPRnqe1wa1PkUf8w"   # generate once
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
       KAFKA_OPTS: "-javaagent:/opt/jmx_exporter.jar=7071:/opt/kafka-jmx.yml"
     volumes:
@@ -30,61 +27,76 @@ services:
 
 
   kafka2:
-    image: confluentinc/cp-kafka:7.5.0
+    image: confluentinc/cp-kafka:7.8.3
     container_name: kafka2
-    depends_on:
-      - zookeeper
+    hostname: kafka2
     ports:
       - "9093:9092"
       - "7072:7071"
     environment:
-      KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.222:9093
+      KAFKA_NODE_ID: 2
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${HOST_IP:-127.0.0.1}:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093,4@kafka4:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      CLUSTER_ID: "f7lZDNZPRnqe1wa1PkUf8w"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
       KAFKA_OPTS: "-javaagent:/opt/jmx_exporter.jar=7071:/opt/kafka-jmx.yml"
     volumes:
       - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
       - ./kafka-jmx.yml:/opt/kafka-jmx.yml
 
+
   kafka3:
-    image: confluentinc/cp-kafka:7.5.0
+    image: confluentinc/cp-kafka:7.8.3
     container_name: kafka3
-    depends_on:
-      - zookeeper
+    hostname: kafka3
     ports:
       - "9094:9092"
       - "7073:7071"
     environment:
-      KAFKA_BROKER_ID: 3
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.222:9094
+      KAFKA_NODE_ID: 3
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${HOST_IP:-127.0.0.1}:9094
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093,4@kafka4:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      CLUSTER_ID: "f7lZDNZPRnqe1wa1PkUf8w"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
       KAFKA_OPTS: "-javaagent:/opt/jmx_exporter.jar=7071:/opt/kafka-jmx.yml"
     volumes:
       - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
       - ./kafka-jmx.yml:/opt/kafka-jmx.yml
 
+
   kafka4:
-    image: confluentinc/cp-kafka:7.5.0
+    image: confluentinc/cp-kafka:7.8.3
     container_name: kafka4
-    depends_on:
-      - zookeeper
+    hostname: kafka4
     ports:
       - "9095:9092"
       - "7074:7071"
     environment:
-      KAFKA_BROKER_ID: 4
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://192.168.1.222:9095
+      KAFKA_NODE_ID: 4
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${HOST_IP:-127.0.0.1}:9095
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093,4@kafka4:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      CLUSTER_ID: "f7lZDNZPRnqe1wa1PkUf8w"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
       KAFKA_OPTS: "-javaagent:/opt/jmx_exporter.jar=7071:/opt/kafka-jmx.yml"
     volumes:
       - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
       - ./kafka-jmx.yml:/opt/kafka-jmx.yml
+
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -97,8 +109,9 @@ services:
       - kafka3
       - kafka4
     environment:
-      KAFKA_CLUSTERS_0_NAME: local-cluster
+      KAFKA_CLUSTERS_0_NAME: kraft-cluster
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:9092,kafka2:9092,kafka3:9092,kafka4:9092
+
 
   prometheus:
     image: prom/prometheus
@@ -107,6 +120,7 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
 
   grafana:
     image: grafana/grafana
@@ -118,6 +132,7 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
 
-# 👇 THIS MUST BE AT ROOT LEVEL (same indentation as services)
+
 volumes:
   grafana-data:
+
