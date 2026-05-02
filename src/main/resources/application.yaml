@@ -1,4 +1,6 @@
 app:
+  scheduler:
+    fixed-rate-ms: 1000
   kafka:
     topics:
       orders: orders

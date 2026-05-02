@@ -47,6 +47,9 @@ start_app() {
   fi
 
   cd "$ROOT_DIR"
+  echo "Pulling latest changes..."
+  git pull
+
   echo "Starting app..."
   nohup ./mvnw spring-boot:run >"$LOG_FILE" 2>&1 &
   echo $! >"$PID_FILE"

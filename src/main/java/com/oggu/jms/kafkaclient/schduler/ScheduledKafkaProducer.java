@@ -27,7 +27,7 @@ public class ScheduledKafkaProducer {
     @Autowired
     private KafkaConfigProps config;
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRateString = "${app.scheduler.fixed-rate-ms:5000}")
     public void produceMessages() {
         config.getTopics().values().forEach(topic -> {
             String key = UUID.randomUUID().toString();
