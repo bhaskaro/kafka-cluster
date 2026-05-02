@@ -21,10 +21,15 @@ It is designed for local development, testing, and observability.
 | `prometheus` | `prom/prometheus` | `9090` |
 | `grafana` | `grafana/grafana` | `3000` |
 
+Kafka roles:
+- `kafka1`, `kafka2`, `kafka3`: `broker,controller`
+- `kafka4`: `broker` only
+
 ## Prerequisites
 
 - Docker
 - Docker Compose v2
+- Java JDK 21+ (JDK required, not JRE) for running the Spring Boot app
 
 ## One-Time Setup
 
@@ -41,7 +46,7 @@ docker run --rm confluentinc/cp-kafka:7.8.3 kafka-storage random-uuid
 `docker-compose.yml` uses:
 
 ```yaml
-KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${HOST_IP:-127.0.0.1}:9092
+KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:29092,EXTERNAL://${HOST_IP:-127.0.0.1}:9092
 ```
 
 Set `HOST_IP` in your shell before startup if clients connect from outside this machine:
@@ -50,7 +55,12 @@ Set `HOST_IP` in your shell before startup if clients connect from outside this 
 export HOST_IP=<your_reachable_host_ip>
 ```
 
-For local-only usage on same machine, default `127.0.0.1` is fine.
+For local-only usage on same machine, default `127.0.0.1` is fine for host clients.
+
+Listener model used by this stack:
+- `INTERNAL://kafkaX:29092` for broker-to-broker and in-network clients
+- `EXTERNAL://${HOST_IP}:9092..9095` for host-machine clients
+- `CONTROLLER://kafka1..3:9093` for KRaft controller quorum traffic
 
 ## Start the Stack
 
@@ -85,7 +95,7 @@ docker compose ps
 List topics from inside a broker container:
 
 ```bash
-docker exec -it kafka1 kafka-topics --bootstrap-server kafka1:9092 --list
+docker exec -it kafka1 kafka-topics --bootstrap-server kafka1:29092 --list
 ```
 
 From host (if Kafka CLI is installed locally):
@@ -106,6 +116,26 @@ JMX metric endpoints:
 - `http://localhost:7072/metrics`
 - `http://localhost:7073/metrics`
 - `http://localhost:7074/metrics`
+
+## Spring Boot App Control
+
+Use the utility script in this repo:
+
+```bash
+./appctl.sh start
+./appctl.sh status
+./appctl.sh logs
+./appctl.sh stop
+```
+
+Default Java path in script:
+- `/scratch/voggu/softwares/jdk-25.0.1`
+
+Override if needed:
+
+```bash
+JAVA_HOME=/path/to/your/jdk ./appctl.sh start
+```
 
 ## Persistence and Reset
 
@@ -133,5 +163,7 @@ docker compose up -d
 ## Notes
 
 - This is a KRaft-only setup; ZooKeeper is not used.
+- Controller quorum voters are `kafka1..kafka3` (3-node quorum).
+- `kafka4` is broker-only and not part of controller quorum.
 - `version: '3.8'` in compose is currently harmless but deprecated by newer Compose CLIs.
 - For shared environments, change the default Grafana admin password.

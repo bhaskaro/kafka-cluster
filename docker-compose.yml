@@ -6,20 +6,21 @@ services:
     image: confluentinc/cp-kafka:7.8.3
     container_name: kafka1
     hostname: kafka1
+    restart: unless-stopped
     ports:
       - "9092:9092"
       - "7071:7071"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${HOST_IP:-127.0.0.1}:9092
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka1:29092,EXTERNAL://${HOST_IP:-127.0.0.1}:9092
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093,4@kafka4:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       CLUSTER_ID: "f7lZDNZPRnqe1wa1PkUf8w"   # generate once
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       KAFKA_OPTS: "-javaagent:/opt/jmx_exporter.jar=7071:/opt/kafka-jmx.yml"
     volumes:
       - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
@@ -37,20 +38,21 @@ services:
     image: confluentinc/cp-kafka:7.8.3
     container_name: kafka2
     hostname: kafka2
+    restart: unless-stopped
     ports:
       - "9093:9092"
       - "7072:7071"
     environment:
       KAFKA_NODE_ID: 2
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${HOST_IP:-127.0.0.1}:9093
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka2:29092,EXTERNAL://${HOST_IP:-127.0.0.1}:9093
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093,4@kafka4:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       CLUSTER_ID: "f7lZDNZPRnqe1wa1PkUf8w"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       KAFKA_OPTS: "-javaagent:/opt/jmx_exporter.jar=7071:/opt/kafka-jmx.yml"
     volumes:
       - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
@@ -68,20 +70,21 @@ services:
     image: confluentinc/cp-kafka:7.8.3
     container_name: kafka3
     hostname: kafka3
+    restart: unless-stopped
     ports:
       - "9094:9092"
       - "7073:7071"
     environment:
       KAFKA_NODE_ID: 3
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${HOST_IP:-127.0.0.1}:9094
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka3:29092,EXTERNAL://${HOST_IP:-127.0.0.1}:9094
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093,4@kafka4:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       CLUSTER_ID: "f7lZDNZPRnqe1wa1PkUf8w"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       KAFKA_OPTS: "-javaagent:/opt/jmx_exporter.jar=7071:/opt/kafka-jmx.yml"
     volumes:
       - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
@@ -99,20 +102,21 @@ services:
     image: confluentinc/cp-kafka:7.8.3
     container_name: kafka4
     hostname: kafka4
+    restart: unless-stopped
     ports:
       - "9095:9092"
       - "7074:7071"
     environment:
       KAFKA_NODE_ID: 4
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${HOST_IP:-127.0.0.1}:9095
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka4:29092,EXTERNAL://${HOST_IP:-127.0.0.1}:9095
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093,4@kafka4:9093
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093,2@kafka2:9093,3@kafka3:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       CLUSTER_ID: "f7lZDNZPRnqe1wa1PkUf8w"
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 4
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
       KAFKA_OPTS: "-javaagent:/opt/jmx_exporter.jar=7071:/opt/kafka-jmx.yml"
     volumes:
       - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
@@ -129,6 +133,7 @@ services:
   kafka-ui:
     image: provectuslabs/kafka-ui:v0.7.2
     container_name: kafka-ui
+    restart: unless-stopped
     ports:
       - "8080:8080"
     depends_on:
@@ -142,12 +147,13 @@ services:
         condition: service_healthy
     environment:
       KAFKA_CLUSTERS_0_NAME: kraft-cluster
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:9092,kafka2:9092,kafka3:9092,kafka4:9092
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:29092,kafka2:29092,kafka3:29092,kafka4:29092
 
 
   prometheus:
     image: prom/prometheus
     container_name: prometheus
+    restart: unless-stopped
     ports:
       - "9090:9090"
     volumes:
@@ -166,6 +172,7 @@ services:
   grafana:
     image: grafana/grafana
     container_name: grafana
+    restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
