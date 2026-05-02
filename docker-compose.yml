@@ -24,6 +24,13 @@ services:
     volumes:
       - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
       - ./kafka-jmx.yml:/opt/kafka-jmx.yml
+      - kafka1-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "KAFKA_OPTS='' kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
 
   kafka2:
@@ -48,6 +55,13 @@ services:
     volumes:
       - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
       - ./kafka-jmx.yml:/opt/kafka-jmx.yml
+      - kafka2-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "KAFKA_OPTS='' kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
 
   kafka3:
@@ -72,6 +86,13 @@ services:
     volumes:
       - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
       - ./kafka-jmx.yml:/opt/kafka-jmx.yml
+      - kafka3-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "KAFKA_OPTS='' kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
 
   kafka4:
@@ -96,18 +117,29 @@ services:
     volumes:
       - ./jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx_exporter.jar
       - ./kafka-jmx.yml:/opt/kafka-jmx.yml
+      - kafka4-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "KAFKA_OPTS='' kafka-broker-api-versions --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
 
   kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+    image: provectuslabs/kafka-ui:v0.7.2
     container_name: kafka-ui
     ports:
       - "8080:8080"
     depends_on:
-      - kafka1
-      - kafka2
-      - kafka3
-      - kafka4
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+      kafka3:
+        condition: service_healthy
+      kafka4:
+        condition: service_healthy
     environment:
       KAFKA_CLUSTERS_0_NAME: kraft-cluster
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka1:9092,kafka2:9092,kafka3:9092,kafka4:9092
@@ -120,6 +152,15 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      kafka1:
+        condition: service_healthy
+      kafka2:
+        condition: service_healthy
+      kafka3:
+        condition: service_healthy
+      kafka4:
+        condition: service_healthy
 
 
   grafana:
@@ -131,8 +172,14 @@ services:
       - grafana-data:/var/lib/grafana
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      prometheus:
+        condition: service_started
 
 
 volumes:
   grafana-data:
-
+  kafka1-data:
+  kafka2-data:
+  kafka3-data:
+  kafka4-data:
